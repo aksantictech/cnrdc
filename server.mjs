@@ -13,6 +13,7 @@ import { ROLES,fail,HttpError,hashPassword,verifyPassword,signJwt,verifyJwt,dige
 const root=dirname(fileURLToPath(import.meta.url));
 const secret=process.env.JWT_SECRET;
 if(!secret||secret.length<32||!process.env.DATABASE_URL)throw Error('Configuration absente : lancer Installer-Carto-CNS.ps1.');
+if(cloud)console.info('Carto-CNS: initialisation du serveur');
 const pool=createPool();
 const validOrigins=allowedOrigins();
 const refs=JSON.parse(await readFile(resolve(root,'public/references.json'),'utf8'));
@@ -42,7 +43,8 @@ app.addHook('onRequest',async(req,reply)=>{
  if(!user)fail(401,'Session terminée. Reconnectez-vous.');req.user=cleanUser(user);req.sessionId=claims.jti;
 });
 app.setErrorHandler((err,req,reply)=>{if(err instanceof z.ZodError)return reply.code(400).send({message:'Vérifiez les champs du questionnaire.',issues:err.issues.map(x=>({path:x.path.join('.'),message:x.message}))});const status=err.statusCode||500;if(status>=500)req.log.error({code:err.code,message:err.message},'Erreur API');return reply.code(status).send({message:status<500?err.message:'Une erreur est survenue. Vos modifications locales sont conservées.'})});
-await administration({app,pool,root,refs,audit,cleanUser,secret});
+await administration({app,pool,root,refs,audit,cleanUser,secret}).catch(error=>{console.error('Carto-CNS: initialisation interrompue',{code:error.code,message:error.message});throw error});
+if(cloud)console.info('Carto-CNS: base de données initialisée');
 app.get('/api/v1/health',async()=>{await pool.query('SELECT 1');const p=await pool.query(`SELECT ${postgisSchema}.postgis_lib_version() AS version`);return{status:'ok',database:'connected',postgis:p.rows[0].version,application:'Carto-CNS'}});
 const dummyHash=hashPassword(randomBytes(24).toString('hex'));
 app.post('/api/v1/auth/login',async(req,reply)=>{
@@ -106,7 +108,7 @@ const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
 app.get('/*',async(req,reply)=>{const p=req.url.split('?')[0];if(p.startsWith('/api/'))fail(404,'Route API introuvable');let name;try{name=decodeURIComponent(p)}catch{fail(400,'Chemin invalide')}if(name==='/'||!extname(name))name='/index.html';const base=resolve(root,'public'),target=resolve(base,'.'+name);if(!target.startsWith(base+sep))fail(404,'Fichier introuvable');try{const info=await stat(target);if(!info.isFile())fail(404,'Fichier introuvable');reply.type(mime[extname(target)]||'application/octet-stream');reply.header('Cache-Control',['.html','.js','.css'].includes(extname(name))?'no-cache':'public, max-age=3600');return await readFile(target)}catch(e){if(e.code==='ENOENT')fail(404,'Fichier introuvable');throw e}});
 app.addHook('onClose',async()=>{await pool.end()});
 export {app};
-if(process.env.CARTO_NO_LISTEN!=='1')await app.listen({host,port});
+if(!cloud&&process.env.CARTO_NO_LISTEN!=='1')await app.listen({host,port});
 if(!cloud)for(const signal of ['SIGTERM','SIGINT'])process.on(signal,async()=>{await app.close();process.exit(0)});
 
 export default app;
