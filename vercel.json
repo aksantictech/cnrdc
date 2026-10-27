@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "fastify",
-  "regions": [
-    "dub1"
-  ],
+  "framework": null,
   "headers": [
     {
       "source": "/(.*)",
@@ -47,6 +44,20 @@
           "value": "no-cache"
         }
       ]
+    }
+  ],
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.mjs": {
+      "maxDuration": 60,
+      "includeFiles": "{server/**,public/references.json,server.mjs}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api?__route=:path*"
     }
   ]
 }

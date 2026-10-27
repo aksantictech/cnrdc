@@ -93,3 +93,5 @@ Les archives pg_dump locales restent locales. En ligne, l’interface renvoie ve
 La CI GitHub exécute les tests de calcul, sécurité métier et PWA sans base externe. `npm test` ajoute les intégrations locales et le test à deux instances Vercel, avec des comptes QA temporaires ; il nécessite les runtimes, la base locale et la migration privée préparée. Ces tests ne réinitialisent pas le compte administrateur de l’utilisateur.
 
 Références : [Fastify sur Vercel](https://vercel.com/docs/frameworks/backend/fastify) et [connexions PostgreSQL Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
+
+Le déploiement de production sert le frontend public depuis le CDN Vercel et utilise une fonction Node explicite dans api/index.mjs pour l’API Fastify. Le point d’entrée conserve la compatibilité locale ; la fonction ne crée pas de serveur HTTP écoutant sur un port. Les secrets restent limités à Production.
