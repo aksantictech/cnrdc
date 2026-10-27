@@ -80,7 +80,7 @@ Limites : [geoBoundaries COD ADM1](https://www.geoboundaries.org/api/current/gbO
 
 ## Déploiement GitHub, Supabase et Vercel
 
-Le dépôt cible est https://github.com/aksantictech/cnrdc et le projet Supabase est gvreudhsintnzlhonsqp. Le serveur Fastify est détecté via server.mjs et vercel.json ; Node 24 est requis. Le frontend et l’API sont sur la même origine HTTPS.
+Le dépôt cible est https://github.com/aksantictech/cnrdc et le projet Supabase est gvreudhsintnzlhonsqp. Le frontend est servi par le CDN Vercel et le serveur Fastify par la fonction api/index.mjs, configurée dans vercel.json ; Node 24 est requis. Le frontend et l’API sont sur la même origine HTTPS.
 
 Le script `node scripts/prepare-supabase.mjs PROJECT_REF POOLER_HOST https://votre-domaine` prépare une migration privée dans `.local/supabase-migration.sql`, une copie des données et `.local/vercel.env`. Il lit la base locale sans l’altérer et teste la migration dans une transaction annulée. Exécuter la migration une seule fois dans un projet sans schéma carto : elle crée PostGIS, un schéma isolé carto et le rôle limité carto_runtime. Les tables ont RLS et n’autorisent que ce rôle ; les rôles Supabase anon et authenticated n’ont pas accès à ce schéma. Le script n’efface aucune donnée distante et échoue si le schéma existe déjà.
 
