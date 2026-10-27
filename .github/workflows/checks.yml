@@ -11,4 +11,4 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node --test test/domain.test.mjs test/canevas.test.mjs test/pwa.test.mjs
-      - run: node --check server/index.mjs && node --check server/administration.mjs && node --check public/app.js && node --check public/workspace.js
+      - run: node --check server.mjs && node --check server/index.mjs && node --check server/administration.mjs && node --check public/app.js && node --check public/workspace.js
