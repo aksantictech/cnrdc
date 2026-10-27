@@ -1,0 +1,21 @@
+{
+  "name": "Carto-CNS — Cartographie des ressources de santé",
+  "short_name": "Carto-CNS",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fa",
+  "theme_color": "#12334c",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
+  "id": "/",
+  "description": "Collecte terrain PNCNS CRSD, questionnaires et signatures hors ligne.",
+  "prefer_related_applications": false
+}

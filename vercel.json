@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastify",
+  "regions": ["dub1"],
+  "functions": {
+    "server.mjs": {"maxDuration": 60, "includeFiles": "{server/**,public/**}"}
+  },
+  "headers": [
+    {"source": "/(.*)", "headers": [
+      {"key":"X-Content-Type-Options","value":"nosniff"},
+      {"key":"X-Frame-Options","value":"DENY"},
+      {"key":"Referrer-Policy","value":"same-origin"},
+      {"key":"Permissions-Policy","value":"geolocation=(self)"},
+      {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"}
+    ]},
+    {"source":"/api/(.*)","headers":[{"key":"Cache-Control","value":"no-store"}]},
+    {"source":"/sw.js","headers":[{"key":"Cache-Control","value":"no-cache"}]}
+  ]
+}

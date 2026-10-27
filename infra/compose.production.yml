@@ -1,0 +1,51 @@
+services:
+  database:
+    image: postgis/postgis:18-3.6
+    environment:
+      POSTGRES_DB: carto_cns
+      POSTGRES_USER: carto_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?secret requis}
+    volumes:
+      - carto-cns-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carto_owner -d carto_cns"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  initialize:
+    build: ..
+    command: ["node", "server/migrate.mjs"]
+    environment:
+      SETUP_DATABASE_URL: postgresql://carto_owner:${POSTGRES_PASSWORD}@database:5432/carto_cns
+      PG_APP_PASSWORD: ${PG_APP_PASSWORD:?secret requis}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?email requis}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?secret requis}
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: "no"
+  application:
+    build: ..
+    environment:
+      DATABASE_URL: postgresql://carto_app:${PG_APP_PASSWORD}@database:5432/carto_cns
+      JWT_SECRET: ${JWT_SECRET:?secret requis}
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 5190
+      APP_ORIGIN: ${APP_ORIGIN:?URL HTTPS requise}
+      TRUST_PROXY: "true"
+    ports:
+      - "127.0.0.1:5190:5190"
+    depends_on:
+      initialize:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+volumes:
+  carto-cns-data:

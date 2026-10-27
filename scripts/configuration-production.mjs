@@ -1,0 +1,3 @@
+import {randomBytes} from 'node:crypto';import{writeFile}from'node:fs/promises';
+const origin=process.argv[2],email=process.argv[3];if(!origin?.startsWith('https://')||!email?.includes('@'))throw Error('Usage : node scripts/configuration-production.mjs https://votre-domaine.cd admin@institution.cd');
+const token=()=>randomBytes(32).toString('hex');await writeFile('.env.production',`POSTGRES_PASSWORD=${token()}\nPG_APP_PASSWORD=${token()}\nJWT_SECRET=${token()}\nADMIN_EMAIL=${email}\nADMIN_PASSWORD=${token()}\nAPP_ORIGIN=${origin}\n`,{flag:'wx',mode:0o600});console.log('Configuration privée créée dans .env.production. Conserver ces secrets dans votre coffre.');

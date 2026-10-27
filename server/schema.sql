@@ -1,0 +1,19 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE TABLE IF NOT EXISTS users(id uuid PRIMARY KEY, name text NOT NULL,email text UNIQUE NOT NULL,password_hash text NOT NULL,role text NOT NULL CHECK(role IN('ADMIN','SUPERVISOR','COLLECTOR','ANALYST','API_CONSUMER')),province text,active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS sessions(id uuid PRIMARY KEY,user_id uuid REFERENCES users(id) ON DELETE CASCADE,expires_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS institutions(id uuid PRIMARY KEY, name text NOT NULL,type text NOT NULL,province text NOT NULL,zone text,location geography(Point,4326),created_by uuid REFERENCES users(id),created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS institutions_location_idx ON institutions USING GIST(location);
+CREATE TABLE IF NOT EXISTS projects(id uuid PRIMARY KEY,institution_id uuid REFERENCES institutions(id),name text NOT NULL,description text,objective text,start_date date,end_date date,phase text,srmnea boolean NOT NULL DEFAULT false);
+CREATE TABLE IF NOT EXISTS reports(id uuid PRIMARY KEY,owner_id uuid NOT NULL REFERENCES users(id),institution_id uuid REFERENCES institutions(id),project_id uuid REFERENCES projects(id),province text NOT NULL,status text NOT NULL DEFAULT 'DRAFT' CHECK(status IN('DRAFT','SUBMITTED','REVIEWED','VALIDATED','NEEDS_REVISION')),version integer NOT NULL DEFAULT 1,payload jsonb NOT NULL,is_demo boolean NOT NULL DEFAULT false,review_comment text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS reports_scope_idx ON reports(province,status,owner_id);
+CREATE TABLE IF NOT EXISTS financial_lines(id uuid PRIMARY KEY,report_id uuid REFERENCES reports(id) ON DELETE CASCADE,year integer NOT NULL CHECK(year BETWEEN 2022 AND 2028),currency text NOT NULL CHECK(currency IN('USD','CDF','EUR')),source text NOT NULL,source_group text NOT NULL CHECK(source_group IN('PUBLIC','PRIVATE','EXTERNAL')),donor text,agency text,activity text,domain text,hf text,hc text,hp text,sk text,pnds_axis text,pnds_intervention text,pnds_action text,pnds_activity text,strategic_activity text,nature text,cost_factor text,beneficiary text,disease text,age_group text,observations text,planned numeric(20,2) NOT NULL CHECK(planned>=0),committed numeric(20,2) NOT NULL CHECK(committed>=0),disbursed numeric(20,2) NOT NULL CHECK(disbursed>=0),executed numeric(20,2) NOT NULL CHECK(executed>=0),cost_amount numeric(20,2) NOT NULL DEFAULT 0 CHECK(cost_amount>=0));
+CREATE INDEX IF NOT EXISTS financial_lines_period_idx ON financial_lines(year,currency,report_id);
+CREATE TABLE IF NOT EXISTS audit_log(id bigserial PRIMARY KEY,actor_id uuid,action text NOT NULL,entity_id uuid,details jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS sync_receipts(user_id uuid REFERENCES users(id),mutation_id uuid NOT NULL,request_hash text NOT NULL,response jsonb NOT NULL,PRIMARY KEY(user_id,mutation_id));
+CREATE TABLE IF NOT EXISTS api_keys(id uuid PRIMARY KEY,label text NOT NULL,key_hash text UNIQUE NOT NULL,province text,created_by uuid REFERENCES users(id),expires_at timestamptz NOT NULL,revoked_at timestamptz,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS app_settings(key text PRIMARY KEY,value jsonb NOT NULL);
+
+ALTER TABLE financial_lines ADD COLUMN IF NOT EXISTS beneficiary_province text NOT NULL DEFAULT '';
+
+ALTER TABLE financial_lines ADD COLUMN IF NOT EXISTS funding_type text NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS funding_supports(id uuid PRIMARY KEY,report_id uuid REFERENCES reports(id) ON DELETE CASCADE,source text NOT NULL,currency text NOT NULL CHECK(currency IN('USD','CDF','EUR')),amount numeric(20,2) NOT NULL CHECK(amount>=0));

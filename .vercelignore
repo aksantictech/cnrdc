@@ -1,0 +1,12 @@
+.local
+.git
+node_modules
+.env
+.env.*
+*.log
+*.dump
+*.backup
+*.local.json
+test
+docs
+infra

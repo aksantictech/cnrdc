@@ -1,0 +1,14 @@
+name: Vérifications
+on: [push, pull_request]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test test/domain.test.mjs test/canevas.test.mjs test/pwa.test.mjs
+      - run: node --check server/index.mjs && node --check server/administration.mjs && node --check public/app.js && node --check public/workspace.js
