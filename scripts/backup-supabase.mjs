@@ -1,3 +1,5 @@
+import pg from 'pg';
+pg.types.setTypeParser(1082,value=>value);
 import {createPool,databaseSchema} from '../server/runtime.mjs';import{writeFile,mkdir,readFile}from'node:fs/promises';import{gzipSync}from'node:zlib';
 const tables=['users','institutions','projects','reports','financial_lines','funding_supports','api_keys','app_settings','audit_log','sync_receipts'];
 const pool=createPool(),client=await pool.connect();const snapshot={format:'carto-cns-data-v1',createdAt:new Date().toISOString(),schema:databaseSchema,tables:{},ddl:{}};

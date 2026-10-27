@@ -1,4 +1,5 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';import {randomBytes} from 'node:crypto';import pg from 'pg';
+pg.types.setTypeParser(1082,value=>value);
 const [projectRef,poolerHost,appOrigin]=process.argv.slice(2);if(!/^[a-z]{20}$/.test(projectRef||'')||!/^[a-z0-9-]+\.pooler\.supabase\.com$/.test(poolerHost||'')||!appOrigin?.startsWith('https://'))throw Error('Usage : node scripts/prepare-supabase.mjs PROJECT_REF POOLER_HOST https://votre-domaine');
 process.loadEnvFile('.env');
 const bootstrap=JSON.parse(await readFile('.local/bootstrap.json','utf8')),source=new pg.Pool({connectionString:bootstrap.ownerUrl});
